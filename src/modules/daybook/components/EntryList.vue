@@ -5,22 +5,38 @@
             type="text"
             class="form-control"
             placeholder="Buscar entradas" 
+            v-model="term"
             />
         </div>
         <div class="entry-scroll-area">
             <Entry
-            v-for="item in 20"
-            :key="item"
+            v-for="entry in entriesByTerm"
+            :key="entry.id"
+            v-model="term"
+            :entry="entry"
             />
         </div>
     </div>
 </template>
 <script>
+import { mapGetters } from 'vuex';
 import { defineAsyncComponent } from 'vue'
+
 export default {
     components:{
         Entry: defineAsyncComponent(() => import('./Entry.vue'))
-    }
+    },
+    computed: {
+        entriesByTerm() {
+            return this.getEntriesByTerm( this.term )
+        },
+        ...mapGetters('journal',['getEntriesByTerm'])
+    },
+    data() {
+        return {
+            term:''
+        }
+    },
 
 }
 </script>
