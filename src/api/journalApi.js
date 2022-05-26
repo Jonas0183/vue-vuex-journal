@@ -7,3 +7,5 @@ const journalApi = axios.create({
 })
 
 export default journalApi
+
+// https://api.cloudinary.com/v1_1/dqrdwglbm/image/upload

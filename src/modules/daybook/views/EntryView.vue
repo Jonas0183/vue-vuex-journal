@@ -7,6 +7,11 @@
                 <span class="mx-2 fs-4 fw-light" >{{ yearDay }}</span>
             </div>
             <div>
+                <input type="file"
+                    @change="onSelectedImg"
+                    ref="imageSelector"
+                    v-show="false"
+                    accept="image/png, image/jpeg">
                 <button 
                     v-if="entry.id"
                     class="btn btn-danger mx-2"
@@ -14,7 +19,9 @@
                     Borrar
                     <i class="fa fa-trash-alt"></i>
                 </button>
-                <button class="btn btn-primary">Subir Foto
+                <button class="btn btn-primary"
+                        @click="onSelectImg">
+                        Subir Foto
                 <i class="fa fa-upload"></i></button>
     
             </div>
@@ -31,13 +38,24 @@
         @on:click="saveEntry"
     />
     <img 
-    src="https://www.pixabay.com/get/g06f04c72c7c53d0abe070d731fdcd1dfb256e18551dd9677e727680d59edf59448d289f861a1c9f09b3c0063bc66efaf0df2379e05db0c81e654aa8efea0043522afd40ed806aea187e60d4e114585c2_1920.jpg" alt="entry-picture"
-    class="img-thumbnail ">
+        v-if="entry.picture && !localImg"
+        :src="entry.picture" alt="entry-picture"
+        class="img-thumbnail ">
+
+    <img 
+        v-if="localImg"
+        :src="localImg" 
+        alt="entry-picture"
+        class="img-thumbnail">
 </template>
 <script>
-import { defineAsyncComponent } from 'vue';
+import { defineAsyncComponent } from 'vue'
 import { mapGetters, mapActions } from 'vuex'
+import Swal from 'sweetalert2'
+
 import getDayMonthYear from '../helpers/getDayMonthYear'
+import uploadImg from '../helpers/uploadImg'
+
 
 
 export default {
@@ -52,7 +70,9 @@ export default {
     },
     data() {
         return {
-            entry:null
+            entry:null,
+            localImg: null,
+            file: null
         }
     },
     computed: {
@@ -84,12 +104,18 @@ export default {
                 entry = this.getEntryById( this.id )
                 if(!entry) return this.$router.push({ name:'no-entry' })
             }
-            this.entry = entry
-
-
-            
+            this.entry = entry            
         },
         async saveEntry(){
+            new Swal({
+                title:'Espere por favor',
+                allowOutsideClick: false,               
+            })
+            Swal.showLoading()
+
+            const picture = await uploadImg( this.file )
+
+            this.entry.picture = picture
 
             if ( this.entry.id ) {
                 await this.updateEntry( this.entry )
@@ -103,11 +129,47 @@ export default {
 
                 this.$router.push({ name: 'entry', params:{ id } })
             }
+            this.file = null
+            Swal.fire('Guardado', 'Entrada registrada con éxito', 'success')
+            
         },
         async onDeleteEntry() { 
-            console.log('delete', this.entry)
-            await this.deleteEntry( this.entry.id )
-            this.$router.push({ name: 'no-entry' })
+
+            const { isConfirmed } = await Swal.fire({
+                title: '¿Está seguro?',
+                text: 'Una vez borrado, no se podrá recuperar.',
+                showDenyButton: true,
+                confirmButtonText: 'Si, estoy seguro.'
+            })
+            if( isConfirmed ){
+                new Swal({
+                    title: 'Espere por favor',
+                    allowOutsideClick:false
+                })
+                Swal.showLoading()
+                await this.deleteEntry( this.entry.id )
+                this.$router.push({ name: 'no-entry' })
+                Swal.fire('Eliminado','','success')
+            }
+            
+        },
+        onSelectedImg( event ){
+            const file = event.target.files[0]
+            if( !file ){
+                this.localImg = null
+                this.file = null
+                return
+            }
+
+            this.file = file
+
+            const fr = new FileReader()
+            fr.onload = () => this.localImg = fr.result
+            fr.readAsDataURL( file )    
+        },
+        onSelectImg(){
+            this.$refs.imageSelector.click()
+
         }
     },
     created(){
@@ -117,8 +179,7 @@ export default {
         id(){
             this.loadEntry()
         }
-    }
-    
+    }   
 }
 </script>
 <style lang="scss" scoped>
