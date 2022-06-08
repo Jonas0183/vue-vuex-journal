@@ -59,6 +59,7 @@ import uploadImg from '../helpers/uploadImg'
 
 
 export default {
+    name: 'EntryView',
     props:{ 
         id: {
             type: String,
@@ -142,7 +143,7 @@ export default {
                 confirmButtonText: 'Si, estoy seguro.'
             })
             if( isConfirmed ){
-                new Swal({
+                Swal.fire({
                     title: 'Espere por favor',
                     allowOutsideClick:false
                 })

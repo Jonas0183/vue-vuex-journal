@@ -6,6 +6,11 @@ const journalApi = axios.create({
 
 })
 
+
+// console.log( process.env.NODE_ENV) // devuelve test para pruebas y development para desarrollo
+//Esta variable sirve para un if para poner 1 bbdd (url) de test y otra desarrollo
+
 export default journalApi
 
 // https://api.cloudinary.com/v1_1/dqrdwglbm/image/upload
+
